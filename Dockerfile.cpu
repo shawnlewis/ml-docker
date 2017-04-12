@@ -1,0 +1,40 @@
+FROM ubuntu:16.04
+
+RUN apt-get update \
+    && apt-get install -y \
+    build-essential \
+    g++ \
+    curl \
+    cmake \
+    swig \
+    wget \
+    git \
+    vim \
+    dbus
+
+RUN wget -q https://repo.continuum.io/archive/Anaconda2-4.3.1-Linux-x86_64.sh
+RUN bash Anaconda2-4.3.1-Linux-x86_64.sh -b
+
+RUN echo "source /root/anaconda2/bin/activate" > /root/.bashrc
+SHELL ["/bin/bash", "--login", "-c"]
+
+# Add SNI support to Python
+RUN pip --no-cache-dir install \
+		pyopenssl \
+		ndg-httpsclient \
+		pyasn1
+
+ARG THEANO_VERSION=rel-0.8.2
+ARG KERAS_VERSION=1.2.0
+
+# Install Theano
+RUN pip --no-cache-dir install git+git://github.com/Theano/Theano.git@${THEANO_VERSION}
+
+# Install Keras
+RUN pip --no-cache-dir install git+git://github.com/fchollet/keras.git@${KERAS_VERSION}
+
+# Set up notebook config
+COPY jupyter_notebook_config.py /root/.jupyter/
+
+# Expose Ports for TensorBoard (6006), Ipython (8888)
+EXPOSE 6006 8888
